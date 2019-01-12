@@ -257,6 +257,25 @@ class Server(object):
                                                                self.certificate,
                                                                self.private_key)
                                      )
+            # FIXME: keep old basic 256 security policy
+            # Security Basic 256 is deprecated by the last standard's specifications.
+            # But I need it for some device client which does not support the latest security policy.
+            if ua.SecurityPolicyType.Basic256_SignAndEncrypt in self._security_policy:
+                self._set_endpoints(security_policies.SecurityPolicyBasic256,
+                                    ua.MessageSecurityMode.SignAndEncrypt)
+                self._policies.append(ua.SecurityPolicyFactory(security_policies.SecurityPolicyBasic256,
+                                                               ua.MessageSecurityMode.SignAndEncrypt,
+                                                               self.certificate,
+                                                               self.private_key)
+                                      )
+            if ua.SecurityPolicyType.Basic256_Sign in self._security_policy:
+                self._set_endpoints(security_policies.SecurityPolicyBasic256,
+                                    ua.MessageSecurityMode.Sign)
+                self._policies.append(ua.SecurityPolicyFactory(security_policies.SecurityPolicyBasic256,
+                                                               ua.MessageSecurityMode.Sign,
+                                                               self.certificate,
+                                                               self.private_key)
+                                      )
 
     def _set_endpoints(self, policy=ua.SecurityPolicy, mode=ua.MessageSecurityMode.None_):
         idtokens = []
