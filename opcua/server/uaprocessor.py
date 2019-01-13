@@ -8,6 +8,7 @@ from opcua.ua.ua_binary import nodeid_from_binary, struct_from_binary
 from opcua.ua.ua_binary import struct_to_binary, uatcp_to_binary
 from opcua.common import utils
 from opcua.common.connection import SecureConnection
+from opcua.crypto import security_policies as sp
 
 
 class PublishRequestData(object):
@@ -140,7 +141,11 @@ class UaProcessor(object):
             response.Parameters.ServerSignature.Signature = \
                 self._connection.security_policy.asymmetric_cryptography.signature(data)
 
-            response.Parameters.ServerSignature.Algorithm = "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
+            # FIXME: temporary to support old device
+            if isinstance(self._connection.security_policy, sp.SecurityPolicyBasic256Sha256):
+                response.Parameters.ServerSignature.Algorithm = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
+            else:
+                response.Parameters.ServerSignature.Algorithm = "http://www.w3.org/2000/09/xmldsig#rsa-sha1"
 
             self.logger.info("sending create session response")
             self.send_response(requesthdr.RequestHandle, algohdr, seqhdr, response)
