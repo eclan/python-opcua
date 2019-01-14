@@ -141,7 +141,7 @@ class UaProcessor(object):
             response.Parameters.ServerSignature.Signature = \
                 self._connection.security_policy.asymmetric_cryptography.signature(data)
 
-            # FIXME: temporary to support old device
+            # FIXME: temporary to support old devices
             if isinstance(self._connection.security_policy, sp.SecurityPolicyBasic256Sha256):
                 response.Parameters.ServerSignature.Algorithm = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
             else:
