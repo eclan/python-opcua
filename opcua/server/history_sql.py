@@ -53,6 +53,10 @@ class HistorySQLite(HistoryStorageInterface):
             self._conn.commit()
 
     def save_node_value(self, node_id, datavalue):
+        # FIXME: temporary fix of datavalue issue from client as ua-expert
+        if not datavalue.SourceTimestamp:
+            datavalue.SourceTimestamp = datetime.utcnow()
+
         with self._lock:
             _c_sub = self._conn.cursor()
 
@@ -69,7 +73,7 @@ class HistorySQLite(HistoryStorageInterface):
                                    datavalue.Value.VariantType.name,
                                    sqlite3.Binary(variant_to_binary(datavalue.Value))
                                )
-                              )
+                               )
             except sqlite3.Error as e:
                 self.logger.error('Historizing SQL Insert Error for %s: %s', node_id, e)
 
@@ -113,7 +117,6 @@ class HistorySQLite(HistoryStorageInterface):
                 for row in _c_read.execute('SELECT * FROM "{tn}" WHERE "SourceTimestamp" BETWEEN ? AND ? '
                                            'ORDER BY "_Id" {dir} LIMIT ?'.format(tn=table, dir=order),
                                            (start_time, end_time, limit,)):
-
                     # rebuild the data value object
                     dv = ua.DataValue(variant_from_binary(Buffer(row[6])))
                     dv.ServerTimestamp = row[1]
@@ -152,7 +155,7 @@ class HistorySQLite(HistoryStorageInterface):
             try:
                 _c_new.execute(
                     'CREATE TABLE "{tn}" (_Id INTEGER PRIMARY KEY NOT NULL, _Timestamp TIMESTAMP, _EventTypeName TEXT, {co})'
-                    .format(tn=table, co=columns))
+                        .format(tn=table, co=columns))
 
             except sqlite3.Error as e:
                 self.logger.info('Historizing SQL Table Creation Error for events from %s: %s', source_id, e)
@@ -171,7 +174,7 @@ class HistorySQLite(HistoryStorageInterface):
             try:
                 _c_sub.execute(
                     'INSERT INTO "{tn}" ("_Id", "_Timestamp", "_EventTypeName", {co}) VALUES (NULL, "{ts}", "{et}", {pl})'
-                    .format(tn=table, co=columns, ts=event.Time, et=event_type, pl=placeholders), evtup)
+                        .format(tn=table, co=columns, ts=event.Time, et=event_type, pl=placeholders), evtup)
 
             except sqlite3.Error as e:
                 self.logger.error('Historizing SQL Insert Error for events from %s: %s', event.SourceNode, e)
@@ -210,7 +213,7 @@ class HistorySQLite(HistoryStorageInterface):
             try:
                 for row in _c_read.execute(
                         'SELECT "_Timestamp", {cl} FROM "{tn}" WHERE "_Timestamp" BETWEEN ? AND ? ORDER BY "_Id" {dir} LIMIT ?'
-                        .format(cl=clauses_str, tn=table, dir=order), (start_time, end_time, limit)):
+                                .format(cl=clauses_str, tn=table, dir=order), (start_time, end_time, limit)):
 
                     fdict = {}
                     cont_timestamps.append(row[0])
